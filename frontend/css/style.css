@@ -1,0 +1,39 @@
+/* 自定义样式补充 */
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* 电影卡片悬停效果 */
+.movie-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.movie-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 筛选按钮激活状态 */
+.filter-btn.active {
+    background-color: #4f46e5 !important;
+    color: white !important;
+    border-color: #4f46e5 !important;
+}
+.filter-btn.active i {
+    color: white !important;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

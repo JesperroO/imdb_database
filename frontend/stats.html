@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics · MovieDB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-film text-yellow-400 text-2xl"></i>
+                <a href="index.html" class="text-xl font-bold tracking-wide hover:text-yellow-400 transition">MovieDB</a>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html" class="hover:text-yellow-400 transition font-medium">Home</a>
+                <a href="stats.html" class="hover:text-yellow-400 transition font-medium">Statistics</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-btn" class="focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 px-4 pb-4 space-y-2">
+            <a href="index.html" class="block py-2 hover:text-yellow-400">Home</a>
+            <a href="stats.html" class="block py-2 hover:text-yellow-400">Statistics</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-2 text-gray-800">📊 Statistics & Analytics</h1>
+        <p class="text-gray-500 mb-8">Based on IMDb Top 1000 Dataset</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Genre Movie Count -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-chart-bar mr-2 text-indigo-500"></i>Movies by Genre
+                </h2>
+                <div class="h-80">
+                    <canvas id="genreCountChart"></canvas>
+                </div>
+            </div>
+            <!-- Genre Average Rating -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-star mr-2 text-yellow-500"></i>Average IMDb Rating by Genre
+                </h2>
+                <div class="h-80">
+                    <canvas id="genreRatingChart"></canvas>
+                </div>
+            </div>
+            <!-- Top 10 Movies -->
+            <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-2">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-trophy mr-2 text-yellow-500"></i>IMDb Top 10 Movies
+                </h2>
+                <div id="top-movies-list" class="divide-y divide-gray-100"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-100 border-t border-gray-200 mt-12 py-8">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2026 MovieDB · Movie Database Project</p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/stats.js"></script>
+    <script>
+        document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>

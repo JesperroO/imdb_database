@@ -1,7 +1,10 @@
 import sqlite3
-from flask import Flask, g, jsonify, abort
+from flask import Flask, g, jsonify, abort, request
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+
 DB_PATH = 'movies.db'
 
 
@@ -26,7 +29,82 @@ def rows_to_list(rows):
     return [dict(row) for row in rows]
 
 
-# API 接口
+# ==================== 新增接口 ====================
+
+@app.get('/api/movies/<int:movie_id>')
+def get_movie_detail(movie_id):
+    """
+    GET /api/movies/<id>
+    获取单部电影完整详情，包含演员列表和类型列表
+    """
+    db = get_db()
+
+    # 获取电影基本信息和导演名
+    movie = db.execute('''
+        SELECT m.*, d.director_name
+        FROM Movie m
+        JOIN Director d ON m.director_id = d.director_id
+        WHERE m.movie_id = ?
+    ''', (movie_id,)).fetchone()
+
+    if movie is None:
+        abort(404, description=f'电影 ID {movie_id} 不存在')
+
+    # 获取演员列表
+    actors = db.execute('''
+        SELECT a.actor_id, a.actor_name
+        FROM Actor a
+        JOIN Movie_Actor ma ON a.actor_id = ma.actor_id
+        WHERE ma.movie_id = ?
+        ORDER BY a.actor_name
+    ''', (movie_id,)).fetchall()
+
+    # 获取类型列表
+    genres = db.execute('''
+        SELECT g.genre_id, g.genre
+        FROM Genre g
+        JOIN Movie_Genre mg ON g.genre_id = mg.genre_id
+        WHERE mg.movie_id = ?
+        ORDER BY g.genre
+    ''', (movie_id,)).fetchall()
+
+    result = dict(movie)
+    result['actors'] = rows_to_list(actors)
+    result['genres'] = rows_to_list(genres)
+    return jsonify(result)
+
+
+@app.get('/api/movies/genre/<string:genre>')
+def get_movies_by_genre(genre):
+    """
+    GET /api/movies/genre/<genre>
+    按类型筛选电影列表
+    """
+    db = get_db()
+
+    # 验证类型是否存在
+    genre_row = db.execute(
+        'SELECT genre_id FROM Genre WHERE genre = ?', (genre,)
+    ).fetchone()
+    if genre_row is None:
+        abort(404, description=f'类型 "{genre}" 不存在')
+
+    rows = db.execute('''
+        SELECT m.movie_id, m.title, m.year, m.imdb_rating,
+               m.votes, m.runtime, m.certificate,
+               m.gross, m.overview, m.poster_link,
+               d.director_name
+        FROM Movie m
+        JOIN Director d ON m.director_id = d.director_id
+        JOIN Movie_Genre mg ON m.movie_id = mg.movie_id
+        WHERE mg.genre_id = ?
+        ORDER BY m.imdb_rating DESC
+    ''', (genre_row['genre_id'],)).fetchall()
+
+    return jsonify(rows_to_list(rows))
+
+
+# ==================== 原有接口（保持不变） ====================
 
 @app.get('/api/movies')
 def get_movies():
@@ -37,7 +115,6 @@ def get_movies():
       - limit  (int, default=10): 返回条数
       - offset (int, default=0):  分页偏移
     """
-    from flask import request
     try:
         limit = int(request.args.get('limit', 10))
         offset = int(request.args.get('offset', 0))
@@ -101,7 +178,6 @@ def get_genre_stats():
     """
     GET /api/stats/genres
     统计各类型电影数量及平均评分，按电影数量降序。
-    Genre 已在建表时拆分为独立表，直接 JOIN 统计即可。
     """
     db = get_db()
     rows = db.execute(
@@ -128,7 +204,6 @@ def get_top_movies():
     Query params:
       - top_n (int, default=10, max=100): 返回条数
     """
-    from flask import request
     try:
         top_n = int(request.args.get('top_n', 10))
     except ValueError:
@@ -164,11 +239,11 @@ def get_genre_avg_rating():
     rows = db.execute(
         """
         SELECT g.genre_id, g.genre,
-               COUNT(mg.movie_id)        AS movie_count,
+               COUNT(mg.movie_id) AS movie_count,
                ROUND(AVG(m.imdb_rating), 2) AS avg_rating
         FROM Genre g
         JOIN Movie_Genre mg ON g.genre_id = mg.genre_id
-        JOIN Movie m        ON mg.movie_id = m.movie_id
+        JOIN Movie m ON mg.movie_id = m.movie_id
         GROUP BY g.genre_id, g.genre
         ORDER BY avg_rating DESC
         """
@@ -199,8 +274,8 @@ def get_actor_movies(actor_id):
                m.gross, m.overview, m.poster_link,
                d.director_name
         FROM Movie m
-        JOIN Movie_Actor ma ON m.movie_id   = ma.movie_id
-        JOIN Director d     ON m.director_id = d.director_id
+        JOIN Movie_Actor ma ON m.movie_id = ma.movie_id
+        JOIN Director d ON m.director_id = d.director_id
         WHERE ma.actor_id = ?
         ORDER BY m.imdb_rating DESC
         """,
@@ -218,7 +293,6 @@ def get_actor_movies(actor_id):
 
 
 # 错误处理
-
 @app.errorhandler(400)
 @app.errorhandler(404)
 def handle_error(e):

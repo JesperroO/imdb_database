@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieDB · Explore the World of Cinema</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-film text-yellow-400 text-2xl"></i>
+                <a href="index.html" class="text-xl font-bold tracking-wide hover:text-yellow-400 transition">MovieDB</a>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html" class="hover:text-yellow-400 transition font-medium">Home</a>
+                <a href="stats.html" class="hover:text-yellow-400 transition font-medium">Statistics</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-btn" class="focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 px-4 pb-4 space-y-2">
+            <a href="index.html" class="block py-2 hover:text-yellow-400">Home</a>
+            <a href="stats.html" class="block py-2 hover:text-yellow-400">Statistics</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Discover Your Next Favorite</h1>
+            <p class="text-lg md:text-xl text-gray-200 mb-8">IMDb Top 1000 Movie Database · Classics & Popular Hits</p>
+            <div class="max-w-2xl mx-auto">
+                <div class="flex shadow-lg">
+                    <input type="text" id="search-input" placeholder="Search by title, overview..." 
+                           class="flex-1 px-5 py-4 rounded-l-lg text-gray-800 focus:outline-none text-lg">
+                    <button id="search-btn" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold px-8 py-4 rounded-r-lg transition">
+                        <i class="fas fa-search mr-2"></i>Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-10">
+        <!-- Quick Filters -->
+        <div class="flex flex-wrap gap-3 mb-10">
+            <button class="filter-btn bg-white border border-gray-300 hover:bg-gray-100 px-5 py-2 rounded-full text-sm font-medium shadow-sm transition" data-genre="all">
+                <i class="fas fa-film mr-1 text-gray-500"></i>All
+            </button>
+            <button class="filter-btn bg-white border border-gray-300 hover:bg-gray-100 px-5 py-2 rounded-full text-sm font-medium shadow-sm transition" data-genre="Drama">
+                <i class="fas fa-mask mr-1 text-indigo-500"></i>Drama
+            </button>
+            <button class="filter-btn bg-white border border-gray-300 hover:bg-gray-100 px-5 py-2 rounded-full text-sm font-medium shadow-sm transition" data-genre="Comedy">
+                <i class="fas fa-laugh-squint mr-1 text-yellow-500"></i>Comedy
+            </button>
+            <button class="filter-btn bg-white border border-gray-300 hover:bg-gray-100 px-5 py-2 rounded-full text-sm font-medium shadow-sm transition" data-genre="Action">
+                <i class="fas fa-bolt mr-1 text-red-500"></i>Action
+            </button>
+            <button class="filter-btn bg-white border border-gray-300 hover:bg-gray-100 px-5 py-2 rounded-full text-sm font-medium shadow-sm transition" data-genre="Sci-Fi">
+                <i class="fas fa-rocket mr-1 text-blue-500"></i>Sci-Fi
+            </button>
+            <a href="stats.html" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition">
+                <i class="fas fa-chart-pie mr-1"></i>Charts
+            </a>
+        </div>
+
+        <!-- Movie Grid -->
+        <div id="movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+            <!-- Dynamically Rendered -->
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="text-center py-16 hidden">
+            <div class="inline-block">
+                <i class="fas fa-circle-notch fa-spin text-5xl text-indigo-500"></i>
+                <p class="text-gray-500 mt-4 text-lg">Loading movies...</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-center items-center mt-12 space-x-3">
+            <button id="prev-page" class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition">
+                <i class="fas fa-chevron-left mr-2"></i>Previous
+            </button>
+            <span id="page-info" class="px-5 py-2 text-gray-700 font-medium">Page 1</span>
+            <button id="next-page" class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition">
+                Next<i class="fas fa-chevron-right ml-2"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 border-t border-gray-200 mt-12 py-8">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p class="mb-2">© 2026 MovieDB · Movie Database Project</p>
+            <p class="text-sm">Data Source: IMDb Top 1000 · Course Project Showcase</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/home.js"></script>
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
