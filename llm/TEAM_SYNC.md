@@ -1,9 +1,5 @@
 # LLM Module Team Sync
 
-## 1) Ready-to-send group comment template
-
-Use this directly in group chat / PR comment:
-
 ```
 LLM integration progress update:
 - LLM module is now centralized under imdb_database/llm.
@@ -40,7 +36,7 @@ Recommended defaults (already in `.env.example`):
 ## 3) Local run steps
 
 ```bash
-cd /home/jes/cuhk_sz/CSC3170/imdb_database
+cd /$YOUR_PATH/imdb_database
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -U pip
