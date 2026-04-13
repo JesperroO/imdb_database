@@ -8,15 +8,111 @@
 ## 启动说明
 
 ```bash
-pip install flask
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# fill GEMINI_API_KEY in .env
 python app.py
 ```
 
 服务默认运行在 `http://127.0.0.1:7777`，debug 模式开启。
 
+说明：
+- 推荐使用 Gemini：`LLM_PROVIDER=gemini` + `GEMINI_API_KEY`。
+- 当前默认模型可设置为 `LLM_MODEL=gemini-3-flash-preview`（或 `GEMINI_MODEL`）。
+- 可通过 `LLM_MAX_RETRIES` 与 `LLM_RETRY_BASE_SEC` 启用 API 重试退避，缓解抖动超时。
+- 建议安装 `sqlglot` 以启用本地 AST 安全网关（更严格地过滤危险 SQL）。
+
 ---
 
 ## 接口列表
+
+### 0. 自然语言转 SQL 查询（LLM）
+
+| 项目 | 内容 |
+|------|------|
+| Method | `POST` |
+| Endpoint | `/api/query/nl` |
+
+**请求体**
+
+```json
+{
+    "query": "show top 5 sci-fi movies after 2010",
+    "strategy": "hybrid"
+}
+```
+
+- `query`：自然语言问题（必填）
+- `strategy`：提示词策略（可选），可取 `zero-shot` / `few-shot` / `constrained` / `hybrid`，默认 `hybrid`（最终实践版本）
+
+**返回示例（成功）**
+
+```json
+{
+    "generated_sql": "SELECT ... LIMIT 50",
+    "latency_ms": 132,
+    "query": "show top 5 sci-fi movies after 2010",
+    "result_count": 5,
+    "react_rounds": 0,
+    "react_trace": [],
+    "results": [
+        {
+            "movie_id": 130,
+            "title": "Inception",
+            "imdb_rating": 8.8,
+            "year": 2010
+        }
+    ],
+    "strategy": "hybrid"
+}
+```
+
+**可靠性机制**
+
+- 本地 AST 安全网关（推荐安装 `sqlglot`）：
+    - 仅允许 `SELECT` / `WITH ... SELECT`
+    - 拦截 `DROP/DELETE/TRUNCATE/UPDATE/INSERT/ALTER/CREATE` 等破坏性语句
+    - 仅允许白名单表
+    - 自动补齐 `LIMIT`（非聚合列表查询）
+- ReAct 修正循环：
+    - 若解析失败或执行报错，系统将错误信息反馈给模型并请求重写 SQL
+    - 返回 `react_trace` 记录每轮失败 SQL 与报错
+
+**返回示例（失败）**
+
+```json
+{
+    "error": "Only SELECT (or WITH...SELECT) queries are allowed.",
+    "query": "drop table Movie",
+    "result_count": 0,
+    "results": [],
+    "strategy": "hybrid"
+}
+```
+
+---
+
+### 0.1 自然语言推荐查询（LLM）
+
+| 项目 | 内容 |
+|------|------|
+| Method | `POST` |
+| Endpoint | `/api/recommend/nl` |
+
+**请求体**
+
+```json
+{
+    "query": "recommend emotional drama movies",
+    "strategy": "hybrid"
+}
+```
+
+响应结构与 `/api/query/nl` 一致，主要区别在于提示词会偏向推荐结果排序。
+
+---
 
 ### 1. 获取电影列表
 
