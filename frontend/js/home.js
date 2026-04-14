@@ -5,6 +5,7 @@ let allMovies = [];
 let filteredMovies = [];
 let currentGenre = 'all';
 let searchKeyword = '';
+let isAIMode = false;
 
 // DOM elements
 const grid = document.getElementById('movies-grid');
@@ -14,6 +15,18 @@ const nextBtn = document.getElementById('next-page');
 const pageInfo = document.getElementById('page-info');
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
+const paginationControls = document.getElementById('pagination-controls');
+
+// AI mode elements
+const modeNormalBtn = document.getElementById('mode-normal');
+const modeAIBtn = document.getElementById('mode-ai');
+const aiModeHint = document.getElementById('ai-mode-hint');
+const llmPanel = document.getElementById('llm-result-panel');
+const llmSqlDisplay = document.getElementById('llm-sql-display');
+const llmResultCount = document.getElementById('llm-result-count');
+const llmLatency = document.getElementById('llm-latency');
+const llmResultsContainer = document.getElementById('llm-results-container');
+const closeLlmPanelBtn = document.getElementById('close-llm-panel');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -154,7 +167,75 @@ async function filterByGenre(genre) {
     }
 }
 
+// AI Search Function
+async function performAISearch() {
+    const query = searchInput.value.trim();
+    if (!query) return;
+
+    // Show LLM panel, hide grid and pagination
+    llmPanel.classList.remove('hidden');
+    grid.classList.add('hidden');
+    paginationControls.style.display = 'none';
+    llmSqlDisplay.textContent = 'Generating SQL...';
+    llmResultsContainer.innerHTML = '<p class="p-4 text-gray-500">Thinking...</p>';
+    llmResultCount.textContent = '0';
+    llmLatency.textContent = '...';
+
+    try {
+        // Heuristic: check if query is recommendation-like
+        const isRecommend = query.toLowerCase().includes('recommend') || 
+                            query.toLowerCase().includes('suggest') ||
+                            query.includes('推荐');
+        
+        let data;
+        if (isRecommend) {
+            data = await recommendNaturalLanguage(query, 'hybrid');
+        } else {
+            data = await queryNaturalLanguage(query, 'hybrid');
+        }
+
+        // Display generated SQL
+        llmSqlDisplay.textContent = data.generated_sql || '-- No SQL generated --';
+        llmResultCount.textContent = data.result_count;
+        llmLatency.textContent = data.latency_ms;
+
+        // Render results table
+        if (data.results && data.results.length > 0) {
+            const columns = Object.keys(data.results[0]);
+            let html = '<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>';
+            columns.forEach(col => {
+                html += `<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${col}</th>`;
+            });
+            html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+            data.results.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    let value = row[col];
+                    if (value === null || value === undefined) value = '';
+                    else if (typeof value === 'number') value = value.toLocaleString();
+                    html += `<td class="px-4 py-2 text-sm text-gray-700">${value}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            llmResultsContainer.innerHTML = html;
+        } else {
+            llmResultsContainer.innerHTML = '<p class="p-4 text-gray-500">No results found.</p>';
+        }
+
+        // Log ReAct trace if any
+        if (data.react_trace && data.react_trace.length > 0) {
+            console.log('ReAct trace:', data.react_trace);
+        }
+    } catch (error) {
+        llmSqlDisplay.textContent = `Error: ${error.message}`;
+        llmResultsContainer.innerHTML = `<p class="p-4 text-red-500">Failed: ${error.message}</p>`;
+        llmResultCount.textContent = '0';
+    }
+}
+
 function setupEventListeners() {
+    // Pagination
     prevBtn.addEventListener('click', () => {
         if (currentPage > 0) {
             currentPage--;
@@ -172,27 +253,71 @@ function setupEventListeners() {
         }
     });
     
-    searchBtn.addEventListener('click', () => {
-        searchKeyword = searchInput.value;
-        applyFilters();
+    // Search mode toggle
+    modeNormalBtn.addEventListener('click', () => {
+        isAIMode = false;
+        modeNormalBtn.classList.remove('bg-gray-700', 'text-white');
+        modeNormalBtn.classList.add('bg-white', 'text-gray-800');
+        modeAIBtn.classList.remove('bg-white', 'text-gray-800');
+        modeAIBtn.classList.add('bg-gray-700', 'text-white');
+        aiModeHint.classList.add('hidden');
+        searchInput.placeholder = 'Search by title, overview...';
+        llmPanel.classList.add('hidden');
+        grid.classList.remove('hidden');
+        paginationControls.style.display = 'flex';
     });
-    
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+
+    modeAIBtn.addEventListener('click', () => {
+        isAIMode = true;
+        modeAIBtn.classList.remove('bg-gray-700', 'text-white');
+        modeAIBtn.classList.add('bg-white', 'text-gray-800');
+        modeNormalBtn.classList.remove('bg-white', 'text-gray-800');
+        modeNormalBtn.classList.add('bg-gray-700', 'text-white');
+        aiModeHint.classList.remove('hidden');
+        searchInput.placeholder = 'Ask anything, e.g., "top 5 action movies"';
+    });
+
+    // Search button
+    searchBtn.addEventListener('click', async () => {
+        if (isAIMode) {
+            await performAISearch();
+        } else {
             searchKeyword = searchInput.value;
             applyFilters();
         }
     });
-    
+
+    // Enter key
+    searchInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            if (isAIMode) {
+                await performAISearch();
+            } else {
+                searchKeyword = searchInput.value;
+                applyFilters();
+            }
+        }
+    });
+
+    // Live search for normal mode (debounced)
     let debounceTimer;
     searchInput.addEventListener('input', () => {
+        if (isAIMode) return; // No live search in AI mode
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             searchKeyword = searchInput.value;
             applyFilters();
         }, 300);
     });
-    
+
+    // Close LLM panel
+    closeLlmPanelBtn.addEventListener('click', () => {
+        llmPanel.classList.add('hidden');
+        grid.classList.remove('hidden');
+        paginationControls.style.display = 'flex';
+    });
+
+    // Genre filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const genre = btn.dataset.genre;

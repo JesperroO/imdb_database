@@ -43,6 +43,16 @@
             <h1 class="text-4xl md:text-5xl font-bold mb-4">Discover Your Next Favorite</h1>
             <p class="text-lg md:text-xl text-gray-200 mb-8">IMDb Top 1000 Movie Database · Classics & Popular Hits</p>
             <div class="max-w-2xl mx-auto">
+                <!-- Search Mode Toggle -->
+                <div class="flex justify-center mb-4 space-x-4">
+                    <button id="mode-normal" class="px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-800 shadow-md transition">
+                        <i class="fas fa-search mr-1"></i>Normal Search
+                    </button>
+                    <button id="mode-ai" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-700 text-white hover:bg-gray-600 shadow-md transition">
+                        <i class="fas fa-robot mr-1"></i>AI Smart Search
+                    </button>
+                </div>
+                <!-- Search Input -->
                 <div class="flex shadow-lg">
                     <input type="text" id="search-input" placeholder="Search by title, overview..." 
                            class="flex-1 px-5 py-4 rounded-l-lg text-gray-800 focus:outline-none text-lg">
@@ -50,6 +60,10 @@
                         <i class="fas fa-search mr-2"></i>Search
                     </button>
                 </div>
+                <!-- AI Mode Hint -->
+                <p id="ai-mode-hint" class="text-gray-300 text-sm mt-3 hidden">
+                    <i class="fas fa-lightbulb mr-1"></i>AI mode: try "top 5 sci-fi movies after 2010" or "recommend emotional dramas"
+                </p>
             </div>
         </div>
     </section>
@@ -78,6 +92,32 @@
             </a>
         </div>
 
+        <!-- LLM Result Panel (hidden by default) -->
+        <div id="llm-result-panel" class="mb-8 hidden">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gray-50 px-6 py-4 border-b flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-800">
+                        <i class="fas fa-robot mr-2 text-indigo-600"></i>AI Generated SQL & Results
+                    </h3>
+                    <button id="close-llm-panel" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Generated SQL</span>
+                        <pre id="llm-sql-display" class="mt-2 bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto"></pre>
+                    </div>
+                    <div>
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Results (<span id="llm-result-count">0</span> rows, <span id="llm-latency">0</span> ms)</span>
+                        <div id="llm-results-container" class="mt-2 max-h-80 overflow-y-auto border rounded-lg">
+                            <!-- Dynamically filled -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Movie Grid -->
         <div id="movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             <!-- Dynamically Rendered -->
@@ -92,7 +132,7 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex justify-center items-center mt-12 space-x-3">
+        <div id="pagination-controls" class="flex justify-center items-center mt-12 space-x-3">
             <button id="prev-page" class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition">
                 <i class="fas fa-chevron-left mr-2"></i>Previous
             </button>
