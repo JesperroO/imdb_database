@@ -180,3 +180,43 @@ Use this file to maintain complete prompt exploration evidence for the report ap
 | few-shot | 15 | 14 | 93.33% | 100.00% | ~2000 | fails case 11 (tuple-IN returns 26 rows) |
 | constrained | 15 | 14 | 93.33% | 100.00% | ~2000 | fails case 11 (same as few-shot) |
 | hybrid | 15 | 14 | 93.33% | 100.00% | ~2000 | fails case 11 (same as few-shot) |
+
+---
+
+## Database Architecture Enhancement (2026-05-08)
+
+- Objective: Complete the first part of LLM+Database bonus (5%) — using LLM to refine database architecture
+
+**LLM Analysis Tasks:**
+1. Analyzed existing dataset for anomalies (value range, referential integrity, duplicates)
+2. Suggested integrity constraints (CHECK, NOT NULL, UNIQUE)
+3. Recommended indexes for efficient data access
+
+**Anomaly Detection Results:**
+- imdb_rating out of [0,10]: 0 anomalies
+- meta_score out of [0,100]: 157 NULL (acceptable missing)
+- year out of [1888,2026]: 0 anomalies
+- Orphan foreign keys: 0
+
+**Schema Enhancement Implemented:**
+- Added 7 CHECK constraints (year, runtime, imdb_rating, meta_score, votes, gross)
+- Added 5 NOT NULL constraints (title, year, runtime, votes)
+- Added 2 UNIQUE constraints (Director.director_name, Genre.genre)
+- Created 13 indexes for query optimization
+- Enabled foreign key CASCADE delete
+
+**Files Created:**
+- `llm_enhanced_schema.py`: Script to apply enhancements
+- `llm_schema_enhancement_report.md`: Detailed comparison report
+
+**Validation:**
+- CHECK constraint tested and working: invalid imdb_rating (15.0) correctly rejected
+
+**Performance Notes:**
+- On small dataset (1000 rows), index impact is minimal (SQLite optimizer works well)
+- Index benefits more significant on larger datasets
+
+**Report Section Added:**
+- Section 7: "AI-Driven Database Architecture Enhancement" in main.tex
+- Documents original vs enhanced schema comparison
+- Contributes to the 5% bonus for database architecture refinement
